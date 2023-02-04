@@ -3,14 +3,14 @@ const { Order } = require('../db/models');
 const { READYTOSHEP }  = require('../constants/statuses');
 
 class CrmController {
-	
 	async checkNewOrders() {
 		const newOrders = await this.getNewOrders();
 		
 		if (newOrders.length !== 0) {
 			const allStores = await this.getAllStores()
 			for (const order of newOrders) {
-				await this.createOrderDb(order, allStores);
+				const store = allStores.find(el => el.code === order.shipmentStore);
+				await this.createOrderDb(order, store);
 			}
 		} else {
 			console.log('Новых заказов нет')
@@ -21,9 +21,7 @@ class CrmController {
 		try {
 			const url = 'https://testmarwin.retailcrm.ru/api/v5/orders?filter[customFields][tastamat_statuses][]=ready-to-ship';
 			const options = {
-				params: {
-					apiKey: process.env.CRMKEY
-				}
+				params: { apiKey: process.env.CRMKEY }
 			};
 			
 			const allNewOrders = await axios(url, options);
@@ -33,14 +31,13 @@ class CrmController {
 		}
 	}
 	
-	async createOrderDb(order, allStores) {
+	async createOrderDb(order, store) {
 		const { id, externalId, site, phone, firstName, lastName, totalSumm, shipmentStore } = order;
-		const nameClient = lastName + ' ' + firstName;
+		const nameClient = `${lastName} ${firstName}`;
 		const lockerIndex = order.delivery.service.code.substring(9);
 		const fullnameStore = order.customFields.warehouse_contact_person;
-		const store = allStores.filter(el => el.code === shipmentStore);
-		const addressStore = store[0].address.text;
-		const mobilePhoneStore = store[0].phone.number;
+		const addressStore = store.address.text;
+		const mobilePhoneStore = store.phone.number;
 		
 		try {
 			await Order.create({
@@ -66,13 +63,14 @@ class CrmController {
 	
 	async getAllStores() {
 		try {
-			const allStores = await axios('https://testmarwin.retailcrm.ru/api/v5/reference/stores', {
-				//TODO позже добавят фильтр по конкретному складу
+			const url = 'https://testmarwin.retailcrm.ru/api/v5/reference/stores';
+			const options = {
 				params: {
 					apiKey: process.env.CRMKEY,
 					limit: 100
 				}
-			});
+			}
+			const allStores = await axios(url, options);
 			return allStores.data.stores;
 		} catch (e) {
 			console.log(e)

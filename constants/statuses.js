@@ -5,6 +5,6 @@ const statuses = {
 	WITHDRAWN: 'withdrawn',
 	END: 'end',
 	APPLICATIONSENT: 'application-sent'
-}
+};
 
-module.exports = statuses
+module.exports = statuses;
