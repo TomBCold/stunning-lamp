@@ -1,0 +1,10 @@
+PORT=3001
+
+DBPORT="3306"
+DBUSERNAME="admin"
+DBPASSWORD="12345"
+
+CRMKEY="fgsfdGDFSgFGD345gt53YtYhtrshGREW"
+
+TERMINALAPIKEY="gfdhgfhh-tr4f-h65r-jht6-hd564ygh5e6h"
+TERMINALAPITOKEN="htrdhe56yh-hert-44ge-h5f6-hgdf653ethb"
