@@ -22,7 +22,10 @@ module.exports = {
       crmId: {
         type: Sequelize.STRING
       },
-      text: {
+      logText: {
+        type: Sequelize.TEXT
+      },
+      errorText: {
         type: Sequelize.TEXT
       },
       createdAt: {

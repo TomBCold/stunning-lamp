@@ -1,12 +1,14 @@
 const axios = require("axios");
 const { Order } = require('../db/models');
 const { READYTOSHEP }  = require('../constants/statuses');
+const Logger = require('../logger')
 
 class CrmController {
 	async checkNewOrders() {
+		await Logger.writeLog({}, 'Начало проверки наличия новых заказов')
 		const newOrders = await this.getNewOrders();
-		
 		if (newOrders.length !== 0) {
+			await Logger.writeLog({}, 'Получены новые заказы из CRM')
 			const allStores = await this.getAllStores()
 			for (const order of newOrders) {
 				const store = allStores.find(el => el.code === order.shipmentStore);
@@ -14,6 +16,7 @@ class CrmController {
 			}
 		} else {
 			console.log('Новых заказов нет')
+			await Logger.writeLog({}, 'Новых заказов нет');
 		}
 	}
 	
@@ -23,11 +26,11 @@ class CrmController {
 			const options = {
 				params: { apiKey: process.env.CRMKEY }
 			};
-			
 			const allNewOrders = await axios(url, options);
 			return allNewOrders.data.orders;
 		} catch (error) {
 			console.log(error)
+			await Logger.writeError({}, 'Ошибка при запросе в CRM для новых заказов', error)
 		}
 	}
 	
@@ -38,9 +41,8 @@ class CrmController {
 		const fullnameStore = order.customFields.warehouse_contact_person;
 		const addressStore = store.address.text;
 		const mobilePhoneStore = store.phone.number;
-		
 		try {
-			await Order.create({
+			const orderInDb = await Order.create({
 				crmId: id,
 				externalId,
 				site,
@@ -56,8 +58,10 @@ class CrmController {
 				parcelValue: totalSumm,
 				status: READYTOSHEP
 			});
+			await Logger.writeLog(orderInDb, 'Запись нового заказа в БД');
 		} catch (e) {
-			console.log(e)
+			console.log(e);
+			await Logger.writeError({ crmId: order.id }, 'Ошибка при записи нового заказа в БД', e)
 		}
 	}
 	
@@ -71,9 +75,11 @@ class CrmController {
 				}
 			}
 			const allStores = await axios(url, options);
+			await Logger.writeLog({}, 'Получен список всех складов')
 			return allStores.data.stores;
 		} catch (e) {
 			console.log(e)
+			await Logger.writeError({}, 'Ошибка при запросе в CRM для всех складов', e)
 		}
 	}
 }

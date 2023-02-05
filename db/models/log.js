@@ -19,7 +19,8 @@ module.exports = (sequelize, DataTypes) => {
 		type: DataTypes.STRING,
 		orderId: DataTypes.INTEGER,
 		crmId: DataTypes.STRING,
-		text: DataTypes.TEXT
+		logText: DataTypes.TEXT,
+		errorText: DataTypes.TEXT,
 	}, {
 		sequelize,
 		modelName: 'Log',

@@ -4,6 +4,7 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const { run } = require('./runner')
+const Logger = require('./logger')
 
 const terminalRouter = require('./routes/terminalRouter');
 
@@ -26,4 +27,5 @@ app.use('/api', terminalRouter);
 app.listen(PORT, () => {
 	run();
 	console.log(`Server has been started on PORT ${PORT}`);
+	Logger.writeLog({}, `Server has been started on PORT ${PORT}`);
 });
