@@ -1,11 +1,24 @@
-const { Order } = require("../db/models");
 const axios = require("axios");
-const { READYTOSHEP, APPLICATIONSENT } = require("../constants/statuses");
+const { Order } = require("../db/models");
 const Logger = require('../logger')
+const { READYTOSHEP, APPLICATIONSENT, SUCCESS, ERROR } = require("../constants/statuses");
+const {
+	LOGAPINEWREQ,
+	LOGAPIGETALLNEW,
+	LOGAPINOTNEW,
+	LOGAPIGETINFO,
+	LOGAPIINFODONE,
+	LOGAPISETSTATUS,
+	LOGAPIUPDATEDB,
+	LOGAPIUPDATECRM,
+	ERRORAPINEWORDERS,
+	ERRORAPIGETINFODB,
+	ERRORAPIUPDATESTATUS
+} = require('../constants/logTypes')
 
 class TerminalController {
 	async getOrders(req, res) {
-		Logger.writeLog({}, 'Пришел запрос в API на получение новых заказов для доставки')
+		Logger.writeLog({}, LOGAPINEWREQ)
 		try {
 			const ordersFromDb = await Order.findAll({ where: { status: READYTOSHEP } });
 			
@@ -23,20 +36,20 @@ class TerminalController {
 					await this.updateStatus(order, APPLICATIONSENT, date);
 				}
 				
-				Logger.writeLog({}, 'Новые заказы переданы API тастаматов')
+				Logger.writeLog({}, LOGAPIGETALLNEW)
 				res.json({ orders });
 			} else {
-				await Logger.writeLog({}, 'Новых заказов для доставки нет')
+				await Logger.writeLog({}, LOGAPINOTNEW)
 				res.json({ orders: [] });
 			}
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError({}, 'Ошибка при получении новых заказов для доставки из БД', e)
+			await Logger.writeError({}, ERRORAPINEWORDERS, e)
 		}
 	}
 	
 	async getOrderInfo(req, res, externalId) {
-		await Logger.writeLog({}, `API пришел запрос на получение данных заказа ${externalId}`)
+		await Logger.writeLog({}, `${LOGAPIGETINFO} ${externalId}`)
 		try {
 			const orderFromDb = await Order.findOne({ where: { externalId} });
 			const order = {
@@ -47,26 +60,25 @@ class TerminalController {
 				lockerIndex: orderFromDb.lockerIndex,
 				parcelValue: orderFromDb.parcelValue
 			};
-			await Logger.writeLog(orderFromDb, 'Данные заказа отправлены')
+			await Logger.writeLog(orderFromDb, LOGAPIINFODONE)
 			res.json(order);
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError({}, `Ошибка при получении данных заказа из БД ${externalId}`, e)
+			await Logger.writeError({}, `${ERRORAPIGETINFODB} ${externalId}`, e)
 			res.json({});
 		}
-		
 	}
 	
 	async setStatus(req, res) {
 		const { date, identificator, status } = req.body;
-		await Logger.writeLog({}, 'API пришел запрос на обновления статуса заказа')
+		await Logger.writeLog({}, LOGAPISETSTATUS)
 		try {
 			const order = await Order.findOne({ where: { externalId: identificator }});
 			await this.updateStatus(order, status, date);
-			const result = { identificator, status, result: "SUCCESS" };
+			const result = { identificator, status, result: SUCCESS };
 			res.json(result);
 		} catch (e) {
-			const result = { identificator, status, result: "ERROR" };
+			const result = { identificator, status, result: ERROR };
 			console.log(e);
 			res.json(result);
 		}
@@ -75,7 +87,7 @@ class TerminalController {
 	async updateStatus(order, newStatus, date) {
 		try {
 			await Order.update({ status: newStatus, dateTerminalStatus: date }, { where: { crmId: order.crmId }});
-			await Logger.writeLog(order, 'Обновление статуса заказа в БД')
+			await Logger.writeLog(order, LOGAPIUPDATEDB)
 			
 			const url = `https://testmarwin.retailcrm.ru/api/v5/orders/${order.crmId}/edit`;
 			const orderBody = `order={\"customFields\": {\"tastamat_statuses\": \"${newStatus}\"}}`;
@@ -91,10 +103,10 @@ class TerminalController {
 			};
 			
 			await axios.post( url, orderBody, options );
-			await Logger.writeLog(order, 'Обновление статуса заказа в CRM')
+			await Logger.writeLog(order, LOGAPIUPDATECRM)
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError(order, 'Ошибка обновление статуса заказа', e)
+			await Logger.writeError(order, ERRORAPIUPDATESTATUS, e)
 		}
 	}
 }

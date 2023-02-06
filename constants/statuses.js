@@ -1,10 +1,11 @@
 const statuses = {
 	READYTOSHEP: 'ready-to-ship',
-	SUCCESS: "SUCCESS",
+	APPLICATIONSENT: 'application-sent',
 	SENT: 'sent',
 	WITHDRAWN: 'withdrawn',
 	END: 'end',
-	APPLICATIONSENT: 'application-sent'
+	SUCCESS: "SUCCESS",
+	ERROR: 'ERROR'
 };
 
 module.exports = statuses;

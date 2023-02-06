@@ -1,28 +1,39 @@
 const axios = require("axios");
 const { Order } = require('../db/models');
-const { READYTOSHEP }  = require('../constants/statuses');
 const Logger = require('../logger')
+const { READYTOSHEP }  = require('../constants/statuses');
+const { URLCRM } = require('../constants/urls')
+const {
+	LOGSTARTCHECK,
+	LOGNEWORDERS,
+	LOGNOTNEW,
+	LOGWRITENEWDB,
+	LOGGETALLSTORES,
+	ERRORCHECKCRM,
+	ERRORNEWDB,
+	ERRORALLSTORES
+} = require('../constants/logTypes')
 
 class CrmController {
 	async checkNewOrders() {
-		await Logger.writeLog({}, 'Начало проверки наличия новых заказов')
+		await Logger.writeLog({}, LOGSTARTCHECK)
 		const newOrders = await this.getNewOrders();
 		if (newOrders.length !== 0) {
-			await Logger.writeLog({}, 'Получены новые заказы из CRM')
+			await Logger.writeLog({}, LOGNEWORDERS)
 			const allStores = await this.getAllStores()
 			for (const order of newOrders) {
 				const store = allStores.find(el => el.code === order.shipmentStore);
 				await this.createOrderDb(order, store);
 			}
 		} else {
-			console.log('Новых заказов нет')
-			await Logger.writeLog({}, 'Новых заказов нет');
+			console.log(LOGNOTNEW)
+			await Logger.writeLog({}, LOGNOTNEW);
 		}
 	}
 	
 	async getNewOrders() {
 		try {
-			const url = 'https://testmarwin.retailcrm.ru/api/v5/orders?filter[customFields][tastamat_statuses][]=ready-to-ship';
+			const url = `${URLCRM}/orders?filter[customFields][tastamat_statuses][]=ready-to-ship`;
 			const options = {
 				params: { apiKey: process.env.CRMKEY }
 			};
@@ -30,7 +41,7 @@ class CrmController {
 			return allNewOrders.data.orders;
 		} catch (error) {
 			console.log(error)
-			await Logger.writeError({}, 'Ошибка при запросе в CRM для новых заказов', error)
+			await Logger.writeError({}, ERRORCHECKCRM, error)
 		}
 	}
 	
@@ -58,16 +69,16 @@ class CrmController {
 				parcelValue: totalSumm,
 				status: READYTOSHEP
 			});
-			await Logger.writeLog(orderInDb, 'Запись нового заказа в БД');
+			await Logger.writeLog(orderInDb, LOGWRITENEWDB);
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError({ crmId: order.id }, 'Ошибка при записи нового заказа в БД', e)
+			await Logger.writeError({ crmId: order.id }, ERRORNEWDB, e)
 		}
 	}
 	
 	async getAllStores() {
 		try {
-			const url = 'https://testmarwin.retailcrm.ru/api/v5/reference/stores';
+			const url = `${URLCRM}/reference/stores`;
 			const options = {
 				params: {
 					apiKey: process.env.CRMKEY,
@@ -75,11 +86,11 @@ class CrmController {
 				}
 			}
 			const allStores = await axios(url, options);
-			await Logger.writeLog({}, 'Получен список всех складов')
+			await Logger.writeLog({}, LOGGETALLSTORES)
 			return allStores.data.stores;
 		} catch (e) {
 			console.log(e)
-			await Logger.writeError({}, 'Ошибка при запросе в CRM для всех складов', e)
+			await Logger.writeError({}, ERRORALLSTORES, e)
 		}
 	}
 }
