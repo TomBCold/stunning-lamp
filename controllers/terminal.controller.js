@@ -1,7 +1,7 @@
 const axios = require("axios");
 const { Order } = require("../db/models");
 const Logger = require('../logger')
-const { READYTOSHEP, APPLICATIONSENT, SUCCESS, ERROR } = require("../constants/statuses");
+const { APPLICATIONSENT, ACCEPTED, SUCCESS, ERROR } = require("../constants/statuses");
 const {
 	LOGAPINEWREQ,
 	LOGAPIGETALLNEW,
@@ -20,7 +20,7 @@ class TerminalController {
 	async getOrders(req, res) {
 		Logger.writeLog({}, LOGAPINEWREQ)
 		try {
-			const ordersFromDb = await Order.findAll({ where: { status: READYTOSHEP } });
+			const ordersFromDb = await Order.findAll({ where: { status: ACCEPTED } });
 			
 			if (ordersFromDb.length !== 0) {
 				const orders = ordersFromDb.map(el => el = {
@@ -85,12 +85,21 @@ class TerminalController {
 	}
 	
 	async updateStatus(order, newStatus, date) {
+		let statusCrm = newStatus;
+		switch (newStatus) {
+			case "SENT": statusCrm = 'sent';
+				break;
+			case "WITHDRAWN": statusCrm = 'withdrawn';
+				break;
+			case "END": statusCrm = 'end';
+				break;
+		}
 		try {
-			await Order.update({ status: newStatus, dateTerminalStatus: date }, { where: { crmId: order.crmId }});
+			await Order.update({ status: statusCrm, dateTerminalStatus: date }, { where: { crmId: order.crmId }});
 			await Logger.writeLog(order, LOGAPIUPDATEDB)
 			
 			const url = `https://testmarwin.retailcrm.ru/api/v5/orders/${order.crmId}/edit`;
-			const orderBody = `order={\"customFields\": {\"tastamat_statuses\": \"${newStatus}\"}}`;
+			const orderBody = `order={\"customFields\": {\"tastamat_statuses\": \"${statusCrm}\"}}`;
 			const options = {
 				headers: {
 					'content-type': 'application/x-www-form-urlencoded'
@@ -101,7 +110,6 @@ class TerminalController {
 					site: order.site
 				}
 			};
-			
 			await axios.post( url, orderBody, options );
 			await Logger.writeLog(order, LOGAPIUPDATECRM)
 		} catch (e) {

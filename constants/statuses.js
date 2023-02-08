@@ -1,5 +1,6 @@
 const statuses = {
 	READYTOSHEP: 'ready-to-ship',
+	ACCEPTED: 'accepted',
 	APPLICATIONSENT: 'application-sent',
 	SENT: 'sent',
 	WITHDRAWN: 'withdrawn',

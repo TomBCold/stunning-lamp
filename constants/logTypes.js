@@ -1,7 +1,7 @@
 const logTypes = {
 	LOGSTARTCHECK: 'Начало проверки наличия новых заказов',
 	LOGNEWORDERS: 'Получены новые заказы из CRM',
-	LOGNOTNEW: 'Получены новые заказы из CRM',
+	LOGNOTNEW: 'Новых заказов нет',
 	LOGWRITENEWDB: 'Запись нового заказа в БД',
 	LOGGETALLSTORES: 'Получен список всех складов',
 	LOGAPINEWREQ: 'Пришел запрос в API на получение новых заказов для доставки',

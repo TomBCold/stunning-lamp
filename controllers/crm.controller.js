@@ -1,7 +1,8 @@
 const axios = require("axios");
 const { Order } = require('../db/models');
 const Logger = require('../logger')
-const { READYTOSHEP }  = require('../constants/statuses');
+const TerminalController = require('./terminal.controller')
+const { READYTOSHEP, ACCEPTED }  = require('../constants/statuses');
 const { URLCRM } = require('../constants/urls')
 const {
 	LOGSTARTCHECK,
@@ -70,6 +71,7 @@ class CrmController {
 				status: READYTOSHEP
 			});
 			await Logger.writeLog(orderInDb, LOGWRITENEWDB);
+			await TerminalController.updateStatus(orderInDb, ACCEPTED)
 		} catch (e) {
 			console.log(e);
 			await Logger.writeError({ crmId: order.id }, ERRORNEWDB, e)
