@@ -1,28 +1,28 @@
 const { Log } = require('./db/models');
 
 class Logger {
-	async writeLog(order, logText) {
+	async writeLog(title, order, logText) {
 		try {
 			await Log.create({
 				type: 'log',
+				title,
 				orderId: order.id,
 				crmId: order.crmId,
-				logText,
-				errorText: null,
+				logText
 			})
 		} catch (e) {
 			console.log(e)
 		}
 	}
 	
-	async writeError(order, logText, errorText) {
+	async writeError(title, order, logText) {
 		try {
 			await Log.create({
 				type: 'error',
+				title,
 				orderId: order.id,
 				crmId: order.crmId,
-				logText,
-				errorText
+				logText
 			})
 		} catch (e) {
 			console.log(e)

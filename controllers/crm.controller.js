@@ -1,58 +1,56 @@
 const axios = require("axios");
 const { Order } = require('../db/models');
-const Logger = require('../logger')
-const TerminalController = require('./terminal.controller')
+const Logger = require('../logger');
+const TerminalController = require('./terminal.controller');
 const { READYTOSHEP, ACCEPTED }  = require('../constants/statuses');
-const { URLCRM } = require('../constants/urls')
+const { URLCRM } = require('../constants/urls');
 const {
-	LOGSTARTCHECK,
-	LOGNEWORDERS,
-	LOGNOTNEW,
+	LOGNEWORDERINFO,
+	LOGNEWORDER,
 	LOGWRITENEWDB,
 	LOGGETALLSTORES,
-	ERRORCHECKCRM,
 	ERRORNEWDB,
-	ERRORALLSTORES
-} = require('../constants/logTypes')
+	ERRORNEWORDERINFO,
+	ERRORALLSTORES,
+	ERRORNEWCRM
+} = require('../constants/logTypes');
 
 class CrmController {
-	async checkNewOrders() {
-		await Logger.writeLog({}, LOGSTARTCHECK)
-		const newOrders = await this.getNewOrders();
-		if (newOrders.length !== 0) {
-			await Logger.writeLog({}, LOGNEWORDERS)
-			const allStores = await this.getAllStores()
-			for (const order of newOrders) {
-				const store = allStores.find(el => el.code === order.shipmentStore);
-				await this.createOrderDb(order, store);
-			}
-		} else {
-			console.log(LOGNOTNEW)
-			await Logger.writeLog({}, LOGNOTNEW);
+	async newOrder(req, res) {
+		try {
+			await Logger.writeLog(LOGNEWORDER, { crmId: req.body.id });
+			const { id } = req.body;
+			const newOrder = await this.getNewOrder(id);
+			const store = await this.getStore(newOrder);
+			await this.createOrderDb(newOrder, store);
+			return res.sendStatus(200);
+		} catch (e) {
+			console.log(e)
+			await Logger.writeError(ERRORNEWCRM, {crmId: req.body.id}, `${e}`);
+			return res.sendStatus(400);
 		}
 	}
 	
-	async getNewOrders() {
+	async getNewOrder(id) {
 		try {
-			const url = `${URLCRM}/orders?filter[customFields][tastamat_statuses][]=ready-to-ship`;
-			const options = {
-				params: { apiKey: process.env.CRMKEY }
-			};
-			const allNewOrders = await axios(url, options);
-			return allNewOrders.data.orders;
-		} catch (error) {
-			console.log(error)
-			await Logger.writeError({}, ERRORCHECKCRM, error)
+			const url = `${URLCRM}/orders/?filter[ids][]=${id}`;
+			const options = { params: { apiKey: process.env.CRMKEY }};
+			const order = await axios(url, options);
+			await Logger.writeLog(LOGNEWORDERINFO, {crmId: id}, JSON.stringify(order.data.orders[0]));
+			return order.data.orders[0];
+		} catch (e) {
+			console.log(e);
+			await Logger.writeError(ERRORNEWORDERINFO, {}, `${e}`);
 		}
 	}
 	
 	async createOrderDb(order, store) {
-		const { id, externalId, site, phone, firstName, lastName, totalSumm, shipmentStore } = order;
+		const { id, externalId, site, phone, firstName, lastName,  shipmentStore } = order;
 		const nameClient = `${lastName} ${firstName}`;
 		const lockerIndex = order.delivery.service.code.substring(9);
 		const fullnameStore = order.customFields.warehouse_contact_person;
 		const addressStore = store.address.text;
-		const mobilePhoneStore = store.phone.number;
+		const mobilePhoneStore = store.phone.number.substring(1);
 		try {
 			const orderInDb = await Order.create({
 				crmId: id,
@@ -62,23 +60,21 @@ class CrmController {
 				addressStore,
 				mobilePhoneStore,
 				fullnameStore,
-				//TODO решить с этим полем
 				companyName: site,
 				nameClient,
-				mobilePhoneClient: phone,
+				mobilePhoneClient: phone.substring(1),
 				lockerIndex,
-				parcelValue: totalSumm,
 				status: READYTOSHEP
 			});
-			await Logger.writeLog(orderInDb, LOGWRITENEWDB);
-			await TerminalController.updateStatus(orderInDb, ACCEPTED)
+			await Logger.writeLog(LOGWRITENEWDB, orderInDb, `${orderInDb}`);
+			await TerminalController.updateStatus(orderInDb, ACCEPTED);
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError({ crmId: order.id }, ERRORNEWDB, e)
+			await Logger.writeError(ERRORNEWDB, { crmId: order.id }, `${e}`);
 		}
 	}
 	
-	async getAllStores() {
+	async getStore(newOrder) {
 		try {
 			const url = `${URLCRM}/reference/stores`;
 			const options = {
@@ -88,11 +84,11 @@ class CrmController {
 				}
 			}
 			const allStores = await axios(url, options);
-			await Logger.writeLog({}, LOGGETALLSTORES)
-			return allStores.data.stores;
+			await Logger.writeLog(LOGGETALLSTORES, {}, `${allStores}`);
+			return allStores.data.stores.find(el => el.code === newOrder.shipmentStore);
 		} catch (e) {
-			console.log(e)
-			await Logger.writeError({}, ERRORALLSTORES, e)
+			console.log(e);
+			await Logger.writeError(ERRORALLSTORES, { crmId: order.id }, `${e}`);
 		}
 	}
 }

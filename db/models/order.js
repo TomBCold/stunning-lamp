@@ -26,7 +26,6 @@ module.exports = (sequelize, DataTypes) => {
     nameClient: DataTypes.STRING,
     mobilePhoneClient: DataTypes.STRING,
     lockerIndex: DataTypes.STRING,
-    parcelValue: DataTypes.DOUBLE,
     dateTerminalStatus: DataTypes.DATE,
     status: DataTypes.STRING,
   }, {

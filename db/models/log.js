@@ -17,10 +17,10 @@ module.exports = (sequelize, DataTypes) => {
 	}
 	Log.init({
 		type: DataTypes.STRING,
+		title: DataTypes.STRING,
 		orderId: DataTypes.INTEGER,
 		crmId: DataTypes.STRING,
-		logText: DataTypes.TEXT,
-		errorText: DataTypes.TEXT,
+		logText: DataTypes.TEXT
 	}, {
 		sequelize,
 		modelName: 'Log',

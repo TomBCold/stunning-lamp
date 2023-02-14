@@ -42,9 +42,6 @@ module.exports = {
       lockerIndex: {
         type: Sequelize.STRING
       },
-      parcelValue: {
-        type: Sequelize.STRING
-      },
       dateTerminalStatus: {
         type: Sequelize.DATE
       },

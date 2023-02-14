@@ -3,10 +3,10 @@ require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-const { run } = require('./runner')
 const Logger = require('./logger')
 
 const terminalRouter = require('./routes/terminalRouter');
+const crmRouter = require('./routes/crmRouter');
 
 const PORT = process.env.PORT ?? 3001;
 const app = express();
@@ -23,9 +23,10 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 app.use('/api', terminalRouter);
+app.use('/crm', crmRouter);
+
 
 app.listen(PORT, () => {
-	run();
-	console.log(`Server has been started on PORT ${PORT}`);
-	Logger.writeLog({}, `Server has been started on PORT ${PORT}`);
+	console.log(`Сервер запущен на порту ${PORT}`);
+	Logger.writeLog(`Сервер запущен на порту ${PORT}`, {}, '');
 });

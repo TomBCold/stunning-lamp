@@ -18,7 +18,7 @@ const {
 
 class TerminalController {
 	async getOrders(req, res) {
-		Logger.writeLog({}, LOGAPINEWREQ)
+		Logger.writeLog(LOGAPINEWREQ, {}, `${req}`)
 		try {
 			const ordersFromDb = await Order.findAll({ where: { status: ACCEPTED } });
 			
@@ -36,42 +36,42 @@ class TerminalController {
 					await this.updateStatus(order, APPLICATIONSENT, date);
 				}
 				
-				Logger.writeLog({}, LOGAPIGETALLNEW)
+				Logger.writeLog(LOGAPIGETALLNEW, {}, `${ordersFromDb}`)
 				res.json({ orders });
 			} else {
-				await Logger.writeLog({}, LOGAPINOTNEW)
+				await Logger.writeLog(LOGAPINOTNEW, {}, )
 				res.json({ orders: [] });
 			}
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError({}, ERRORAPINEWORDERS, e)
+			await Logger.writeError(ERRORAPINEWORDERS, {} , e)
 		}
 	}
 	
 	async getOrderInfo(req, res, externalId) {
-		await Logger.writeLog({}, `${LOGAPIGETINFO} ${externalId}`)
+		await Logger.writeLog(LOGAPIGETINFO, {}, `${externalId}`)
 		try {
 			const orderFromDb = await Order.findOne({ where: { externalId} });
 			const order = {
 				trackNumber: orderFromDb.externalId,
 				mobilePhone: orderFromDb.mobilePhoneClient,
 				fullname: orderFromDb.nameClient,
-				address: null,
+				address: '',
 				lockerIndex: orderFromDb.lockerIndex,
-				parcelValue: orderFromDb.parcelValue
+				parcelValue: 0
 			};
-			await Logger.writeLog(orderFromDb, LOGAPIINFODONE)
+			await Logger.writeLog(LOGAPIINFODONE, orderFromDb, `${orderFromDb}`)
 			res.json(order);
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError({}, `${ERRORAPIGETINFODB} ${externalId}`, e)
+			await Logger.writeError(ERRORAPIGETINFODB, {}, `${externalId}`, e)
 			res.json({});
 		}
 	}
 	
 	async setStatus(req, res) {
 		const { date, identificator, status } = req.body;
-		await Logger.writeLog({}, LOGAPISETSTATUS)
+		await Logger.writeLog(LOGAPISETSTATUS, {}, `${req}`)
 		try {
 			const order = await Order.findOne({ where: { externalId: identificator }});
 			await this.updateStatus(order, status, date);
@@ -96,7 +96,7 @@ class TerminalController {
 		}
 		try {
 			await Order.update({ status: statusCrm, dateTerminalStatus: date }, { where: { crmId: order.crmId }});
-			await Logger.writeLog(order, LOGAPIUPDATEDB)
+			await Logger.writeLog(LOGAPIUPDATEDB, order )
 			
 			const url = `https://testmarwin.retailcrm.ru/api/v5/orders/${order.crmId}/edit`;
 			const orderBody = `order={\"customFields\": {\"tastamat_statuses\": \"${statusCrm}\"}}`;
@@ -111,10 +111,10 @@ class TerminalController {
 				}
 			};
 			await axios.post( url, orderBody, options );
-			await Logger.writeLog(order, LOGAPIUPDATECRM)
+			await Logger.writeLog(LOGAPIUPDATECRM, order )
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError(order, ERRORAPIUPDATESTATUS, e)
+			await Logger.writeError(ERRORAPIUPDATESTATUS, order, `${e}`)
 		}
 	}
 }

@@ -12,6 +12,9 @@ module.exports = {
       type: {
         type: Sequelize.STRING
       },
+      title: {
+        type: Sequelize.STRING
+      },
       orderId: {
         type: Sequelize.INTEGER,
         references: {
@@ -23,9 +26,6 @@ module.exports = {
         type: Sequelize.STRING
       },
       logText: {
-        type: Sequelize.TEXT
-      },
-      errorText: {
         type: Sequelize.TEXT
       },
       createdAt: {
