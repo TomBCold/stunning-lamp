@@ -26,7 +26,7 @@ class CrmController {
 			return res.sendStatus(200);
 		} catch (e) {
 			console.log(e)
-			await Logger.writeError(ERRORNEWCRM, {crmId: req.body.id}, `${e}`);
+			await Logger.writeError(ERRORNEWCRM, {crmId: req.body.id}, JSON.stringify(e));
 			return res.sendStatus(400);
 		}
 	}
@@ -40,17 +40,17 @@ class CrmController {
 			return order.data.orders[0];
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError(ERRORNEWORDERINFO, {}, `${e}`);
+			await Logger.writeError(ERRORNEWORDERINFO, {}, JSON.stringify(e));
 		}
 	}
 	
 	async createOrderDb(order, store) {
 		const { id, externalId, site, phone, firstName, lastName,  shipmentStore } = order;
 		const nameClient = `${lastName} ${firstName}`;
-		const lockerIndex = order.delivery.service.code.substring(9);
+		const lockerIndex = order.delivery.service.code.replace(/\D/g,'');
 		const fullnameStore = order.customFields.warehouse_contact_person;
 		const addressStore = store.address.text;
-		const mobilePhoneStore = store.phone.number.substring(1);
+		const mobilePhoneStore = store.phone.number.replace(/\D/g,'');
 		try {
 			const orderInDb = await Order.create({
 				crmId: id,
@@ -62,15 +62,15 @@ class CrmController {
 				fullnameStore,
 				companyName: site,
 				nameClient,
-				mobilePhoneClient: phone.substring(1),
+				mobilePhoneClient: phone.replace(/\D/g,''),
 				lockerIndex,
 				status: READYTOSHEP
 			});
-			await Logger.writeLog(LOGWRITENEWDB, orderInDb, `${orderInDb}`);
+			await Logger.writeLog(LOGWRITENEWDB, orderInDb, JSON.stringify(orderInDb));
 			await TerminalController.updateStatus(orderInDb, ACCEPTED);
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError(ERRORNEWDB, { crmId: order.id }, `${e}`);
+			await Logger.writeError(ERRORNEWDB, { crmId: order.id }, JSON.stringify(e));
 		}
 	}
 	
@@ -84,11 +84,11 @@ class CrmController {
 				}
 			}
 			const allStores = await axios(url, options);
-			await Logger.writeLog(LOGGETALLSTORES, {}, `${allStores}`);
+			await Logger.writeLog(LOGGETALLSTORES, {});
 			return allStores.data.stores.find(el => el.code === newOrder.shipmentStore);
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError(ERRORALLSTORES, { crmId: order.id }, `${e}`);
+			await Logger.writeError(ERRORALLSTORES, { crmId: order.id }, JSON.stringify(e));
 		}
 	}
 }

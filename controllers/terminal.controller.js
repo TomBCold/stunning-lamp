@@ -18,7 +18,7 @@ const {
 
 class TerminalController {
 	async getOrders(req, res) {
-		Logger.writeLog(LOGAPINEWREQ, {}, `${req}`)
+		Logger.writeLog(LOGAPINEWREQ, {})
 		try {
 			const ordersFromDb = await Order.findAll({ where: { status: ACCEPTED } });
 			
@@ -36,7 +36,7 @@ class TerminalController {
 					await this.updateStatus(order, APPLICATIONSENT, date);
 				}
 				
-				Logger.writeLog(LOGAPIGETALLNEW, {}, `${ordersFromDb}`)
+				Logger.writeLog(LOGAPIGETALLNEW, {}, JSON.stringify(ordersFromDb))
 				res.json({ orders });
 			} else {
 				await Logger.writeLog(LOGAPINOTNEW, {}, )
@@ -44,12 +44,12 @@ class TerminalController {
 			}
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError(ERRORAPINEWORDERS, {} , e)
+			await Logger.writeError(ERRORAPINEWORDERS, {} , JSON.stringify(e))
 		}
 	}
 	
 	async getOrderInfo(req, res, externalId) {
-		await Logger.writeLog(LOGAPIGETINFO, {}, `${externalId}`)
+		await Logger.writeLog(LOGAPIGETINFO, {}, externalId)
 		try {
 			const orderFromDb = await Order.findOne({ where: { externalId} });
 			const order = {
@@ -60,26 +60,32 @@ class TerminalController {
 				lockerIndex: orderFromDb.lockerIndex,
 				parcelValue: 0
 			};
-			await Logger.writeLog(LOGAPIINFODONE, orderFromDb, `${orderFromDb}`)
+			await Logger.writeLog(LOGAPIINFODONE, orderFromDb, JSON.stringify(orderFromDb))
 			res.json(order);
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError(ERRORAPIGETINFODB, {}, `${externalId}`, e)
+			await Logger.writeError(ERRORAPIGETINFODB, {}, JSON.stringify(e))
 			res.json({});
 		}
 	}
 	
 	async setStatus(req, res) {
 		const { date, identificator, status } = req.body;
-		await Logger.writeLog(LOGAPISETSTATUS, {}, `${req}`)
+		await Logger.writeLog(LOGAPISETSTATUS, {}, JSON.stringify(req.body))
 		try {
 			const order = await Order.findOne({ where: { externalId: identificator }});
-			await this.updateStatus(order, status, date);
-			const result = { identificator, status, result: SUCCESS };
-			res.json(result);
+			if(order) {
+				await this.updateStatus(order, status, date);
+				const result = { identificator, status, result: SUCCESS };
+				res.json(result);
+			} else {
+				await Logger.writeError(ERRORAPIUPDATESTATUS, {}, 'Заказ не найден в базе')
+				res.json({ identificator, status, result: ERROR });
+			}
 		} catch (e) {
 			const result = { identificator, status, result: ERROR };
 			console.log(e);
+			await Logger.writeError(ERRORAPIUPDATESTATUS, {}, JSON.stringify(e))
 			res.json(result);
 		}
 	}
@@ -114,7 +120,7 @@ class TerminalController {
 			await Logger.writeLog(LOGAPIUPDATECRM, order )
 		} catch (e) {
 			console.log(e);
-			await Logger.writeError(ERRORAPIUPDATESTATUS, order, `${e}`)
+			await Logger.writeError(ERRORAPIUPDATESTATUS, order, JSON.stringify(e))
 		}
 	}
 }
