@@ -104,7 +104,7 @@ class TerminalController {
 			await Order.update({ status: statusCrm, dateTerminalStatus: date }, { where: { crmId: order.crmId }});
 			await Logger.writeLog(LOGAPIUPDATEDB, order )
 			
-			const url = `https://testmarwin.retailcrm.ru/api/v5/orders/${order.crmId}/edit`;
+			const url = `${process.env.RETAILCRM_URL}/orders/${order.crmId}/edit`;
 			const orderBody = `order={\"customFields\": {\"tastamat_statuses\": \"${statusCrm}\"}}`;
 			const options = {
 				headers: {
@@ -112,7 +112,7 @@ class TerminalController {
 				},
 				params: {
 					by: 'id',
-					apiKey: process.env.CRMKEY,
+					apiKey: process.env.RETAILCRM_API_KEY,
 					site: order.site
 				}
 			};

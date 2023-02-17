@@ -3,7 +3,6 @@ const { Order } = require('../db/models');
 const Logger = require('../logger');
 const TerminalController = require('./terminal.controller');
 const { READYTOSHEP, ACCEPTED }  = require('../constants/statuses');
-const { URLCRM } = require('../constants/urls');
 const {
 	LOGNEWORDERINFO,
 	LOGNEWORDER,
@@ -33,8 +32,8 @@ class CrmController {
 	
 	async getNewOrder(id) {
 		try {
-			const url = `${URLCRM}/orders/?filter[ids][]=${id}`;
-			const options = { params: { apiKey: process.env.CRMKEY }};
+			const url = `${process.env.RETAILCRM_URL}/orders/?filter[ids][]=${id}`;
+			const options = { params: { apiKey: process.env.RETAILCRM_API_KEY }};
 			const order = await axios(url, options);
 			await Logger.writeLog(LOGNEWORDERINFO, {crmId: id}, JSON.stringify(order.data.orders[0]));
 			return order.data.orders[0];
@@ -76,10 +75,10 @@ class CrmController {
 	
 	async getStore(newOrder) {
 		try {
-			const url = `${URLCRM}/reference/stores`;
+			const url = `${process.env.RETAILCRM_URL}/reference/stores`;
 			const options = {
 				params: {
-					apiKey: process.env.CRMKEY,
+					apiKey: process.env.RETAILCRM_API_KEY,
 					limit: 100
 				}
 			}

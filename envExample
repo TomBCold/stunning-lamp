@@ -1,12 +1,13 @@
 PORT=3001
 
-DB_PROJECT_HOST=reportdb.meloman.kz
+DB_PROJECT_HOST="reportdb.meloman.kz"
 DB_PROJECT_PORT=3306
-DB_PROJECT_DATABASE="melomandb"
+DB_PROJECT_DATABASE="namedb"
 DB_PROJECT_USERNAME="admin"
 DB_PROJECT_PASSWORD="xxxxx"
 
-CRMKEY="fgsfdGDFSgFGD345gt53YtYhtrshGREW"
+RETAILCRM_URL="https://marvin.retalcrm.ru/api/v5"
+RETAILCRM_API_KEY="fgsfdGDFSgFGD345gt53YtYhtrshGREW"
 
 TERMINALAPIKEY="gfdhgfhh-tr4f-h65r-jht6-hd564ygh5e6h"
 TERMINALAPITOKEN="htrdhe56yh-hert-44ge-h5f6-hgdf653ethb"
