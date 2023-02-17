@@ -2,24 +2,24 @@ require('dotenv').config();
 
 module.exports = {
   development: {
-    username: process.env.DBUSERNAME,
-    password: process.env.DBPASSWORD,
-    database: 'lampdb',
-    host: '127.0.0.1',
+    username: process.env.DB_PROJECT_USERNAME,
+    password: process.env.DB_PROJECT_PASSWORD,
+    database: process.env.DB_PROJECT_DATABASE,
+    host: process.env.DB_PROJECT_HOST,
     dialect: 'mysql'
   },
   test: {
-    username: "root",
-    password: null,
-    database: "database_test",
-    host: "127.0.0.1",
-    dialect: "mysql"
+    username: process.env.DB_PROJECT_USERNAME,
+    password: process.env.DB_PROJECT_PASSWORD,
+    database: process.env.DB_PROJECT_DATABASE,
+    host: process.env.DB_PROJECT_HOST,
+    dialect: 'mysql'
   },
   production: {
-    username: "root",
-    password: null,
-    database: "database_production",
-    host: "127.0.0.1",
-    dialect: "mysql"
+    username: process.env.DB_PROJECT_USERNAME,
+    password: process.env.DB_PROJECT_PASSWORD,
+    database: process.env.DB_PROJECT_DATABASE,
+    host: process.env.DB_PROJECT_HOST,
+    dialect: 'mysql'
   }
 };
