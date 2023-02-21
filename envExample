@@ -6,8 +6,10 @@ DB_PROJECT_DATABASE="namedb"
 DB_PROJECT_USERNAME="admin"
 DB_PROJECT_PASSWORD="xxxxx"
 
-RETAILCRM_URL="https://marvin.retalcrm.ru/api/v5"
+RETAILCRM_URL="https://marvin.retailcrm.ru/api/v5"
 RETAILCRM_API_KEY="fgsfdGDFSgFGD345gt53YtYhtrshGREW"
+
+CLIENT_URL="https://marvin.retailcrm.ru"
 
 TERMINALAPIKEY="gfdhgfhh-tr4f-h65r-jht6-hd564ygh5e6h"
 TERMINALAPITOKEN="htrdhe56yh-hert-44ge-h5f6-hgdf653ethb"
